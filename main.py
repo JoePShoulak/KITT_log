@@ -7,11 +7,11 @@ from datetime import timedelta
 
 from parse import *
 
-class KITTLogGrapher:
+class FileGraphApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("KITT Log Grapher")
-        self.root.geometry("300x100")
+        self.root.title("Dual-Axis Graph Viewer")
+        self.root.geometry("300x100")  # Start small
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
         self.selected_vars = []  # Up to 2 selected variable names
@@ -28,22 +28,25 @@ class KITTLogGrapher:
         self.root.destroy()
 
     def setup_ui(self):
+        # Frame to hold plot and variable list
         self.main_frame = tk.Frame(self.root)
         self.main_frame.pack(fill="both", expand=True, padx=10, pady=10)
-
-        self.plot_frame = tk.Frame(self.main_frame)
-        self.plot_frame.pack(side="left", fill="both", expand=True)
-
-        self.date_label = tk.Label(self.var_frame, text="")
-        self.var_label = tk.Label(self.var_frame, text="Select up to 2 variables:")
-        self.var_frame = tk.Frame(self.main_frame)
 
         self.open_button = tk.Button(self.root, text="Open File", command=self.open_file)
         self.open_button.pack(pady=(10, 5))
 
+        # Plot area
+        self.plot_frame = tk.Frame(self.main_frame)
+        self.plot_frame.pack(side="left", fill="both", expand=True)
+
+        # Variable list area (hidden initially)
+        self.var_frame = tk.Frame(self.main_frame)
+        self.date_label = tk.Label(self.var_frame, text="")
+        self.var_label = tk.Label(self.var_frame, text="Select up to 2 variables:")
         self.var_listbox = tk.Listbox(self.var_frame, selectmode="multiple", exportselection=False)
         self.var_listbox.bind('<<ListboxSelect>>', self.on_variable_select)
 
+        # Error checkbox
         self.error_checkbox = tk.Checkbutton(self.var_frame, text="Show Errors", variable=self.show_errors, command=self.plot_data)
 
     def open_file(self):
@@ -53,15 +56,19 @@ class KITTLogGrapher:
             try:
                 with open(file_path, 'r') as file:
                     self.dataset, self.errors = parse_file(file)
+                    if len(self.dataset) == 0:
+                        messagebox.showwarning("File Error", "No data in the file. Is this a valid log file?")
+                        return
+
             except Exception as e:
-                messagebox.showwarning("File Error", "Failed to parse data from file. Is your data valid?")
-                return
+                print(e)
 
             self.all_vars = [data.name for data in self.dataset]
             self.var_listbox.delete(0, tk.END)
             for var in self.all_vars:
                 self.var_listbox.insert(tk.END, var)
 
+            # Extract date from filename
             try:
                 filename = file_path.split("/")[-1]
                 timestamp = filename.split("_")[1][:4]  # MMDD
@@ -71,6 +78,7 @@ class KITTLogGrapher:
             except:
                 self.date_label.config(text=filename.split("_")[-1])
 
+            # Move open button to var_frame
             self.open_button.pack_forget()
             self.open_button.pack(in_=self.var_frame, pady=(0, 5))
 
@@ -82,14 +90,12 @@ class KITTLogGrapher:
             self.var_frame.pack(side="right", fill="y", padx=10)  # Show var list
             self.root.geometry("1200x900")  # Expand window after loading
 
-            try:
-                self.plot_data()
-            except Exception as e:
-                messagebox.showwarning("Plotting Error", "Failed to plot data. Is your data valid?")
+            self.plot_data()
 
     def on_variable_select(self, event):
         selection = self.var_listbox.curselection()
         if len(selection) > 2:
+            # Revert selection to last valid state
             for i in range(len(self.all_vars)):
                 self.var_listbox.selection_clear(i)
 
@@ -150,5 +156,5 @@ class KITTLogGrapher:
 
 if __name__ == "__main__":
     root = tk.Tk()
-    app = KITTLogGrapher(root)
+    app = FileGraphApp(root)
     root.mainloop()
