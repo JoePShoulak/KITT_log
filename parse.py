@@ -35,15 +35,16 @@ def parse_file(file):
                 all_datasets.append(Dataset(name, unit, [[time, value]]))  
         else:
             time, message = re.match(re_err, line).groups()
-            errors.append([time, message])
+            errors.append([datetime.strptime(time, "%H:%M:%S"), message])
 
-    print(all_datasets[0].data)
-    return all_datasets
+    return all_datasets, errors
 
 if __name__ == "__main__":
     filepath = "C:/Users/joeps/coding/kitt_py/data/log_11235813.txt"
     try:
         with open(filepath, 'r') as file:
-            parse_file(file)
+            datasets, errors = parse_file(file)
+            print(datasets)
+            print(errors)
     except:
         pass
