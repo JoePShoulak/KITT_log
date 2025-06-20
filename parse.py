@@ -40,3 +40,14 @@ def parse_file(file):
             errors.append([datetime.strptime(time, "%H:%M:%S"), message])
 
     return all_datasets, errors
+
+def parse_filename(file_path):
+    try:
+        filename = file_path.split("/")[-1]
+        timestamp = filename.split("_")[1][:4]  # MMDD
+        month = timestamp[:2]
+        day = timestamp[2:4]
+        return f"Date: {month}/{day}"
+    except:
+        return filename.split("_")[-1]
+        
