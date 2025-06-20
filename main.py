@@ -8,10 +8,10 @@ from datetime import timedelta
 
 from parse import *
 
-class FileGraphApp:
+class KITTLogGrapher:
     def __init__(self, root):
         self.root = root
-        self.root.title("Dual-Axis Graph Viewer")
+        self.root.title("KITT Log Grapher")
         self.root.geometry("300x100")
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
@@ -163,5 +163,5 @@ class FileGraphApp:
 
 if __name__ == "__main__":
     root = ttk.Window(themename="darkly")
-    app = FileGraphApp(root)
+    app = KITTLogGrapher(root)
     root.mainloop()
