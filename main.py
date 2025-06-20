@@ -11,7 +11,7 @@ class FileGraphApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Dual-Axis Graph Viewer")
-        self.root.geometry("300x100")  # Start small
+        self.root.geometry("300x100")
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
         self.selected_vars = []
@@ -47,8 +47,7 @@ class FileGraphApp:
         self.all_vars = [data.name for data in self.dataset]
         self.var_listbox.delete(0, tk.END)
 
-        for var in self.all_vars:
-            self.var_listbox.insert(tk.END, var)
+        for var in self.all_vars: self.var_listbox.insert(tk.END, var)
 
         self.main_frame.pack(fill="both", expand=True, padx=10, pady=10)
 

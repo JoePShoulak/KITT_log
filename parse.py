@@ -3,9 +3,9 @@ from datetime import datetime
 
 class Dataset:
     def __init__(self, name, unit="", data=None):
-        self.name = name      # e.g., "Voltage"
-        self.data = data      # list of values, e.g., [46.8, 47.1, ...]
-        self.unit = unit      # e.g., "V"
+        self.name = name
+        self.data = data
+        self.unit = unit
 
     def __repr__(self):
         return f"Data(name='{self.name}', unit='{self.unit}', data_length={len(self.data)})"
@@ -44,7 +44,7 @@ def parse_file(file):
 def parse_filename(file_path):
     try:
         filename = file_path.split("/")[-1]
-        timestamp = filename.split("_")[1][:4]  # MMDD
+        timestamp = filename.split("_")[1][:4]
         month = timestamp[:2]
         day = timestamp[2:4]
         return f"Date: {month}/{day}"
