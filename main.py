@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox
+import ttkbootstrap as ttk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
@@ -28,20 +29,20 @@ class FileGraphApp:
         self.root.destroy()
 
     def setup_ui(self):
-        self.main_frame = tk.Frame(self.root)
+        self.main_frame = ttk.Frame(self.root)
 
-        self.open_button = tk.Button(self.root, text="Open File", command=self.open_file)
+        self.open_button = ttk.Button(self.root, text="Open File", command=self.open_file)
         self.open_button.pack(expand=True)
 
-        self.plot_frame = tk.Frame(self.main_frame)
+        self.plot_frame = ttk.Frame(self.main_frame)
         self.plot_frame.pack(side="left", fill="both", expand=True)
 
-        self.var_frame = tk.Frame(self.main_frame)
-        self.date_label = tk.Label(self.var_frame, text="")
-        self.var_label = tk.Label(self.var_frame, text="Select up to 2 variables:")
+        self.var_frame = ttk.Frame(self.main_frame)
+        self.date_label = ttk.Label(self.var_frame, text="")
+        self.var_label = ttk.Label(self.var_frame, text="Select up to 2 variables:")
         self.var_listbox = tk.Listbox(self.var_frame, selectmode="multiple", exportselection=False)
         self.var_listbox.bind('<<ListboxSelect>>', self.on_variable_select)
-        self.error_checkbox = tk.Checkbutton(self.var_frame, text="Show Errors", variable=self.show_errors, command=self.plot_data)
+        self.error_checkbox = ttk.Checkbutton(self.var_frame, text="Show Errors", variable=self.show_errors, command=self.plot_data)
 
     def prepare_window(self, file_path):
         self.all_vars = [data.name for data in self.dataset]
@@ -149,6 +150,6 @@ class FileGraphApp:
         self.canvas.get_tk_widget().pack(fill="both", expand=True)
 
 if __name__ == "__main__":
-    root = tk.Tk()
+    root = ttk.Window(themename="darkly")
     app = FileGraphApp(root)
     root.mainloop()
