@@ -1,5 +1,5 @@
 import re
-
+from datetime import datetime
 
 class Dataset:
     def __init__(self, name, unit="", data=[]):
@@ -26,6 +26,7 @@ def parse_file(file):
 
         if log_type == "DAT":
             time, name, value, unit = re.match(re_dat, line).groups()
+            time, value = datetime.strptime(time, "%H:%M:%S"), float(value)
             dataset = next((d for d in all_datasets if d.name == name), None)
 
             if dataset is not None:
@@ -36,8 +37,8 @@ def parse_file(file):
             time, message = re.match(re_err, line).groups()
             errors.append([time, message])
 
-    print(all_datasets)
-    print(len(errors))
+    print(all_datasets[0].data)
+    return all_datasets
 
 if __name__ == "__main__":
     filepath = "C:/Users/joeps/coding/kitt_py/data/log_11235813.txt"

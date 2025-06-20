@@ -12,21 +12,12 @@ class FileGraphApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Dual-Axis Graph Viewer")
-        self.root.geometry("900x600")
+        self.root.geometry("1200x600")
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
         self.selected_vars = []  # Up to 2 selected variable names
-
-        # Generate dummy data as [(x, y), ...] pairs
-        base_time = datetime.strptime("11:23:00", "%H:%M:%S")
-        self.dummy_data = [
-            Dataset("Temperature", "C", [(base_time + timedelta(seconds=5 * i), 22 + 5 * math.sin(i / 2)) for i in range(10)]),
-            Dataset("Current", "A", [(base_time + timedelta(seconds=5 * i), 8 + math.sin(i)) for i in range(10)]),
-            Dataset("Voltage", "V", [(base_time + timedelta(seconds=5 * i), 12 if i % 2 == 0 else 15) for i in range(10)]),
-            Dataset("Speed", "mph", [(base_time + timedelta(seconds=5 * i), 25 + 5 * math.log(i + 2)) for i in range(10)]),
-        ]
-
-        self.all_vars = [data.name for data in self.dummy_data]
+        self.all_vars = []
+        self.dataset = []
 
         self.setup_ui()
         self.canvas = None
@@ -55,10 +46,7 @@ class FileGraphApp:
         self.var_label.pack()
 
         self.var_listbox = tk.Listbox(self.var_frame, selectmode="multiple", exportselection=False)
-        for var in self.all_vars:
-            self.var_listbox.insert(tk.END, var)
         self.var_listbox.pack(pady=5)
-
         self.var_listbox.bind('<<ListboxSelect>>', self.on_variable_select)
 
     def open_file(self):
@@ -70,11 +58,16 @@ class FileGraphApp:
             print(f"Selected file: {file_path}")
             try:
                 with open(file_path, 'r') as file:
-                    parse_file(file)
+                    self.dataset = parse_file(file)
             except Exception as e:
                 print(f"Failed to open file: {e}")
                 return
-            
+
+            self.all_vars = [data.name for data in self.dataset]
+            self.var_listbox.delete(0, tk.END)
+            for var in self.all_vars:
+                self.var_listbox.insert(tk.END, var)
+
             self.var_frame.pack(side="right", fill="y", padx=10)  # Show var list
             self.plot_data()
         else:
@@ -100,22 +93,22 @@ class FileGraphApp:
         ax2 = None
 
         if len(self.selected_vars) >= 1:
-            data1 = next(d for d in self.dummy_data if d.name == self.selected_vars[0])
+            data1 = next(d for d in self.dataset if d.name == self.selected_vars[0])
             x1, y1 = zip(*data1.data)
             ax1.plot(x1, y1, label=data1.name, color='tab:blue')
-            ax1.set_ylabel(f"{data1.name} ({data1.unit})", color='tab:blue')
+            ax1.set_ylabel(f"{data1.name} - {data1.unit}", color='tab:blue', labelpad=10)
             ax1.tick_params(axis='y', labelcolor='tab:blue')
 
         if len(self.selected_vars) == 2:
-            data2 = next(d for d in self.dummy_data if d.name == self.selected_vars[1])
+            data2 = next(d for d in self.dataset if d.name == self.selected_vars[1])
             x2, y2 = zip(*data2.data)
             ax2 = ax1.twinx()
             ax2.plot(x2, y2, label=data2.name, color='tab:red')
-            ax2.set_ylabel(f"{data2.name} ({data2.unit})", color='tab:red')
+            ax2.set_ylabel(f"{data2.name} - {data2.unit}", color='tab:red', labelpad=10)
             ax2.tick_params(axis='y', labelcolor='tab:red')
 
         ax1.set_xlabel("Time")
-        ax1.set_title("Dummy Data Plot")
+        ax1.set_title("Data Plot")
 
         ax1.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M:%S"))
         fig.autofmt_xdate()
