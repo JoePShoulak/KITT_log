@@ -37,6 +37,10 @@ def parse_file(file):
             time, message = re.match(re_err, line).groups()
             errors.append([datetime.strptime(time, "%H:%M:%S"), message])
 
+    if len(all_datasets) == 0:
+        print("hit")
+        return
+
     return all_datasets, errors
 
 if __name__ == "__main__":

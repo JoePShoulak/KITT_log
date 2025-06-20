@@ -12,7 +12,7 @@ class FileGraphApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Dual-Axis Graph Viewer")
-        self.root.geometry("1200x900")
+        self.root.geometry("300x100")  # Start small
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
         self.selected_vars = []  # Up to 2 selected variable names
@@ -21,8 +21,8 @@ class FileGraphApp:
         self.errors = []
         self.show_errors = tk.BooleanVar(value=False)
 
-        self.setup_ui()
         self.canvas = None
+        self.setup_ui()
 
     def on_close(self):
         plt.close('all')  # Close any lingering matplotlib figures
@@ -40,36 +40,28 @@ class FileGraphApp:
         # Variable list area (hidden initially)
         self.var_frame = tk.Frame(self.main_frame)
 
-        # Open file button (now outside var_frame and above it)
-        self.open_button = tk.Button(self.main_frame, text="Open File", command=self.open_file)
-        self.open_button.pack(side="right", anchor="n", padx=10, pady=(0, 5))
+        # Open file button (start position)
+        self.open_button = tk.Button(self.root, text="Open File", command=self.open_file)
+        self.open_button.pack(pady=(10, 5))
 
         self.date_label = tk.Label(self.var_frame, text="")
-        self.date_label.pack(pady=(0, 5))
-
         self.var_label = tk.Label(self.var_frame, text="Select up to 2 variables:")
-        self.var_label.pack()
 
         self.var_listbox = tk.Listbox(self.var_frame, selectmode="multiple", exportselection=False)
-        self.var_listbox.pack(pady=5)
         self.var_listbox.bind('<<ListboxSelect>>', self.on_variable_select)
 
         # Error checkbox
         self.error_checkbox = tk.Checkbutton(self.var_frame, text="Show Errors", variable=self.show_errors, command=self.plot_data)
-        self.error_checkbox.pack(pady=5)
 
     def open_file(self):
-        file_path = filedialog.askopenfilename(
-            title="Open a file",
-            filetypes=[("Text Files", "*.txt"), ("All Files", "*.")]
-        )
+        file_path = filedialog.askopenfilename(title="Open a file", filetypes=[("Text Files", "*.txt")] )
+
         if file_path:
-            print(f"Selected file: {file_path}")
             try:
                 with open(file_path, 'r') as file:
                     self.dataset, self.errors = parse_file(file)
             except Exception as e:
-                print(f"Failed to open file: {e}")
+                messagebox.showwarning("File Error", "Failed to parse data from file. Is your data valid?")
                 return
 
             self.all_vars = [data.name for data in self.dataset]
@@ -85,12 +77,23 @@ class FileGraphApp:
                 day = timestamp[2:4]
                 self.date_label.config(text=f"Date: {month}/{day}")
             except:
-                self.date_label.config(text="")
+                self.date_label.config(text=filename.split("_")[-1])
+
+            # Move open button to var_frame
+            self.open_button.pack_forget()
+            self.open_button.pack(in_=self.var_frame, pady=(0, 5))
+
+            self.date_label.pack(pady=(0, 5))
+            self.var_label.pack()
+            self.var_listbox.pack(pady=5)
+            self.error_checkbox.pack(pady=5)
 
             self.var_frame.pack(side="right", fill="y", padx=10)  # Show var list
-            self.plot_data()
-        else:
-            print("No file selected.")
+            self.root.geometry("1200x900")  # Expand window after loading
+            try:
+                self.plot_data()
+            except Exception as e:
+                messagebox.showwarning("Plotting Error", "Failed to plot data. Is your data valid?")
 
     def on_variable_select(self, event):
         selection = self.var_listbox.curselection()
@@ -135,7 +138,7 @@ class FileGraphApp:
                 ax1.axvline(x=err_time, color='red', linestyle='dotted', linewidth=1)
                 ax1.text(err_time, 1.02, message, rotation=45, transform=ax1.get_xaxis_transform(),
                          color='red', fontsize=8, ha='left', va='bottom')
-            if not x_limits:
+            if not x_limits and error_times:
                 x_limits.extend([min(error_times), max(error_times)])
 
         if x_limits:
