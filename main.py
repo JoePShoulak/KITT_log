@@ -28,12 +28,12 @@ class FileGraphApp:
         self.root.destroy()
 
     def setup_ui(self):
-        # Frame to hold plot and variable list
+        # Frame to hold plot and variable list (packed after file is loaded)
         self.main_frame = tk.Frame(self.root)
-        self.main_frame.pack(fill="both", expand=True, padx=10, pady=10)
 
         self.open_button = tk.Button(self.root, text="Open File", command=self.open_file)
-        self.open_button.pack(pady=(10, 5))
+        # Center the button in the initial small window
+        self.open_button.pack(expand=True)
 
         # Plot area
         self.plot_frame = tk.Frame(self.main_frame)
@@ -67,6 +67,9 @@ class FileGraphApp:
             self.var_listbox.delete(0, tk.END)
             for var in self.all_vars:
                 self.var_listbox.insert(tk.END, var)
+
+            # Now that we have valid data, display the main frame
+            self.main_frame.pack(fill="both", expand=True, padx=10, pady=10)
 
             # Extract date from filename
             try:
