@@ -1,5 +1,6 @@
 import tkinter as tk
-from tkinter import filedialog, messagebox
+from tkinter import filedialog
+from ttkbootstrap.dialogs import Messagebox
 import ttkbootstrap as ttk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
@@ -78,11 +79,11 @@ class FileGraphApp:
                 self.dataset, self.errors = parse_file(file)
 
                 if len(self.dataset) == 0:
-                    messagebox.showwarning("File Error", "No data in the file. Is this a valid log file?")
+                    Messagebox.show_warning("File Error", "No data in the file. Is this a valid log file?")
                     return
 
         except Exception:
-            messagebox.showwarning("File Error", "Invalid data. Is this a valid log file?")
+            Messagebox.show_warning("File Error", "Invalid data. Is this a valid log file?")
             return
 
         self.prepare_window(file_path)
@@ -98,7 +99,7 @@ class FileGraphApp:
                 idx = self.all_vars.index(var)
                 self.var_listbox.selection_set(idx)
 
-            messagebox.showwarning("Limit Exceeded", "Please select up to 2 variables.")
+            Messagebox.show_warning("Limit Exceeded", "Please select up to 2 variables.")
         else:
             self.selected_vars = [self.all_vars[i] for i in selection]
             self.plot_data()
@@ -151,5 +152,7 @@ class FileGraphApp:
 
 if __name__ == "__main__":
     root = ttk.Window(themename="darkly")
+    root.set_titlebar_style("dark")
+    root.configure(titlecolor="white")
     app = FileGraphApp(root)
     root.mainloop()
