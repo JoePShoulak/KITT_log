@@ -24,6 +24,14 @@ class FileGraphApp:
         self.canvas = None
         self.setup_ui()
 
+    def style_axis(self, ax, with_grid=False):
+        ax.set_facecolor("black")
+        ax.tick_params(axis="both", colors="white")
+        for spine in ax.spines.values():
+            spine.set_color("white")
+        if with_grid:
+            ax.grid(True, color="gray")
+
     def on_close(self):
         plt.close('all')
         self.root.destroy()
@@ -107,6 +115,8 @@ class FileGraphApp:
         dataset = next(d for d in self.dataset if d.name == self.selected_vars[idx])
         color = 'tab:blue' if idx == 0 else 'tab:red'
         ax = ax1 if idx == 0 else ax1.twinx()
+        if idx == 1:
+            self.style_axis(ax)
 
         x, y = zip(*dataset.data)
         ax.plot(x, y, label=dataset.name, color=color)
@@ -116,6 +126,8 @@ class FileGraphApp:
 
     def plot_data(self):
         fig, ax1 = plt.subplots(figsize=(6, 4))
+        fig.patch.set_facecolor("black")
+        self.style_axis(ax1, with_grid=True)
         x_limits = []
 
         if len(self.selected_vars) >= 1:
@@ -138,7 +150,7 @@ class FileGraphApp:
             margin = timedelta(seconds=5)
             ax1.set_xlim(x_limits[0] - margin, x_limits[1] + margin)
 
-        ax1.set_xlabel("Time")
+        ax1.set_xlabel("Time", color="white")
         ax1.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M:%S"))
         fig.autofmt_xdate()
 
