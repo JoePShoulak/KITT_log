@@ -68,7 +68,13 @@ class FileGraphApp:
         )
         if file_path:
             print(f"Selected file: {file_path}")
-            # Placeholder — you'd parse the file here
+            try:
+                with open(file_path, 'r') as file:
+                    parse_file(file)
+            except Exception as e:
+                print(f"Failed to open file: {e}")
+                return
+            
             self.var_frame.pack(side="right", fill="y", padx=10)  # Show var list
             self.plot_data()
         else:
