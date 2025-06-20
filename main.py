@@ -14,7 +14,7 @@ class FileGraphApp:
         self.root.geometry("300x100")  # Start small
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
-        self.selected_vars = []  # Up to 2 selected variable names
+        self.selected_vars = []
         self.all_vars = []
         self.dataset = []
         self.errors = []
@@ -24,82 +24,72 @@ class FileGraphApp:
         self.setup_ui()
 
     def on_close(self):
-        plt.close('all')  # Close any lingering matplotlib figures
+        plt.close('all')
         self.root.destroy()
 
     def setup_ui(self):
-        # Frame to hold plot and variable list (packed after file is loaded)
         self.main_frame = tk.Frame(self.root)
 
         self.open_button = tk.Button(self.root, text="Open File", command=self.open_file)
-        # Center the button in the initial small window
         self.open_button.pack(expand=True)
 
-        # Plot area
         self.plot_frame = tk.Frame(self.main_frame)
         self.plot_frame.pack(side="left", fill="both", expand=True)
 
-        # Variable list area (hidden initially)
         self.var_frame = tk.Frame(self.main_frame)
         self.date_label = tk.Label(self.var_frame, text="")
         self.var_label = tk.Label(self.var_frame, text="Select up to 2 variables:")
         self.var_listbox = tk.Listbox(self.var_frame, selectmode="multiple", exportselection=False)
         self.var_listbox.bind('<<ListboxSelect>>', self.on_variable_select)
-
-        # Error checkbox
         self.error_checkbox = tk.Checkbutton(self.var_frame, text="Show Errors", variable=self.show_errors, command=self.plot_data)
+
+    def prepare_window(self, file_path):
+        self.all_vars = [data.name for data in self.dataset]
+        self.var_listbox.delete(0, tk.END)
+
+        for var in self.all_vars:
+            self.var_listbox.insert(tk.END, var)
+
+        self.main_frame.pack(fill="both", expand=True, padx=10, pady=10)
+
+        self.date_label.config(parse_filename(file_path))
+        self.date_label.pack(pady=(0, 5))
+
+        self.open_button.pack_forget()
+        self.open_button.pack(in_=self.var_frame, pady=(0, 5))
+
+        self.var_label.pack()
+        self.var_listbox.pack(pady=5)
+
+        self.error_checkbox.pack(pady=5)
+
+        self.var_frame.pack(side="right", fill="y", padx=10)
+        self.root.geometry("1200x900")
+
+        self.plot_data()
 
     def open_file(self):
         file_path = filedialog.askopenfilename(title="Open a file", filetypes=[("Text Files", "*.txt")] )
+        if not file_path: return
 
-        if file_path:
-            try:
-                with open(file_path, 'r') as file:
-                    self.dataset, self.errors = parse_file(file)
-                    if len(self.dataset) == 0:
-                        messagebox.showwarning("File Error", "No data in the file. Is this a valid log file?")
-                        return
+        try:
+            with open(file_path, 'r') as file:
+                self.dataset, self.errors = parse_file(file)
 
-            except Exception as e:
-                messagebox.showwarning("File Error", "Invalid data. Is this a valid log file?")
-                return
+                if len(self.dataset) == 0:
+                    messagebox.showwarning("File Error", "No data in the file. Is this a valid log file?")
+                    return
 
-            self.all_vars = [data.name for data in self.dataset]
-            self.var_listbox.delete(0, tk.END)
-            for var in self.all_vars:
-                self.var_listbox.insert(tk.END, var)
+        except Exception:
+            messagebox.showwarning("File Error", "Invalid data. Is this a valid log file?")
+            return
 
-            # Now that we have valid data, display the main frame
-            self.main_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        self.prepare_window(file_path)
 
-            # Extract date from filename
-            try:
-                filename = file_path.split("/")[-1]
-                timestamp = filename.split("_")[1][:4]  # MMDD
-                month = timestamp[:2]
-                day = timestamp[2:4]
-                self.date_label.config(text=f"Date: {month}/{day}")
-            except:
-                self.date_label.config(text=filename.split("_")[-1])
-
-            # Move open button to var_frame
-            self.open_button.pack_forget()
-            self.open_button.pack(in_=self.var_frame, pady=(0, 5))
-
-            self.date_label.pack(pady=(0, 5))
-            self.var_label.pack()
-            self.var_listbox.pack(pady=5)
-            self.error_checkbox.pack(pady=5)
-
-            self.var_frame.pack(side="right", fill="y", padx=10)  # Show var list
-            self.root.geometry("1200x900")  # Expand window after loading
-
-            self.plot_data()
-
-    def on_variable_select(self, event):
+    def on_variable_select(self, _):
         selection = self.var_listbox.curselection()
+
         if len(selection) > 2:
-            # Revert selection to last valid state
             for i in range(len(self.all_vars)):
                 self.var_listbox.selection_clear(i)
 
@@ -110,37 +100,36 @@ class FileGraphApp:
             messagebox.showwarning("Limit Exceeded", "Please select up to 2 variables.")
         else:
             self.selected_vars = [self.all_vars[i] for i in selection]
-            print(f"Selected variables: {self.selected_vars}")
             self.plot_data()
+
+    def update_plot(self, idx, ax1, x_limits):
+        dataset = next(d for d in self.dataset if d.name == self.selected_vars[idx])
+        color = 'tab:blue' if idx == 0 else 'tab:red'
+        ax = ax1 if idx == 0 else ax1.twinx()
+
+        x, y = zip(*dataset.data)
+        ax.plot(x, y, label=dataset.name, color=color)
+        ax.set_ylabel(f"{dataset.name} - {dataset.unit}", color=color, labelpad=10)
+        ax.tick_params(axis='y', labelcolor=color)
+        x_limits.extend([min(x), max(x)])
 
     def plot_data(self):
         fig, ax1 = plt.subplots(figsize=(6, 4))
-        ax2 = None
         x_limits = []
 
         if len(self.selected_vars) >= 1:
-            data1 = next(d for d in self.dataset if d.name == self.selected_vars[0])
-            x1, y1 = zip(*data1.data)
-            ax1.plot(x1, y1, label=data1.name, color='tab:blue')
-            ax1.set_ylabel(f"{data1.name} - {data1.unit}", color='tab:blue', labelpad=10)
-            ax1.tick_params(axis='y', labelcolor='tab:blue')
-            x_limits.extend([min(x1), max(x1)])
-
+            self.update_plot(0, ax1, x_limits)
+            
         if len(self.selected_vars) == 2:
-            data2 = next(d for d in self.dataset if d.name == self.selected_vars[1])
-            x2, y2 = zip(*data2.data)
-            ax2 = ax1.twinx()
-            ax2.plot(x2, y2, label=data2.name, color='tab:red')
-            ax2.set_ylabel(f"{data2.name} - {data2.unit}", color='tab:red', labelpad=10)
-            ax2.tick_params(axis='y', labelcolor='tab:red')
-            x_limits.extend([min(x2), max(x2)])
+            self.update_plot(1, ax1, x_limits)
 
         if self.show_errors.get():
             error_times = [err_time for err_time, _ in self.errors]
+
             for err_time, message in self.errors:
                 ax1.axvline(x=err_time, color='red', linestyle='dotted', linewidth=1)
-                ax1.text(err_time, 1.02, message, rotation=45, transform=ax1.get_xaxis_transform(),
-                         color='red', fontsize=8, ha='left', va='bottom')
+                ax1.text(err_time, 1.02, message, rotation=45, transform=ax1.get_xaxis_transform(), color='red', fontsize=8, ha='left', va='bottom')
+
             if not x_limits and error_times:
                 x_limits.extend([min(error_times), max(error_times)])
 
