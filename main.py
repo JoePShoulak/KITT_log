@@ -47,7 +47,8 @@ class FileGraphApp:
         self.all_vars = [data.name for data in self.dataset]
         self.var_listbox.delete(0, tk.END)
 
-        for var in self.all_vars: self.var_listbox.insert(tk.END, var)
+        for var in self.all_vars:
+            self.var_listbox.insert(tk.END, var)
 
         self.main_frame.pack(fill="both", expand=True, padx=10, pady=10)
 
@@ -140,7 +141,8 @@ class FileGraphApp:
         ax1.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M:%S"))
         fig.autofmt_xdate()
 
-        if self.canvas: self.canvas.get_tk_widget().destroy()
+        if self.canvas:
+            self.canvas.get_tk_widget().destroy()
 
         self.canvas = FigureCanvasTkAgg(fig, master=self.plot_frame)
         self.canvas.draw()
