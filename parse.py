@@ -2,7 +2,7 @@ import re
 from datetime import datetime
 
 class Dataset:
-    def __init__(self, name, unit="", data=[]):
+    def __init__(self, name, unit="", data=None):
         self.name = name      # e.g., "Voltage"
         self.data = data      # list of values, e.g., [46.8, 47.1, ...]
         self.unit = unit      # e.g., "V"
