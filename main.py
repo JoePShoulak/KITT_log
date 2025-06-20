@@ -53,7 +53,7 @@ class FileGraphApp:
 
         self.main_frame.pack(fill="both", expand=True, padx=10, pady=10)
 
-        self.date_label.config(parse_filename(file_path))
+        self.date_label.config(text=parse_filename(file_path))
         self.date_label.pack(pady=(0, 5))
 
         self.open_button.pack_forget()
