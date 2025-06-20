@@ -61,7 +61,8 @@ class FileGraphApp:
                         return
 
             except Exception as e:
-                print(e)
+                messagebox.showwarning("File Error", "Invalid data. Is this a valid log file?")
+                return
 
             self.all_vars = [data.name for data in self.dataset]
             self.var_listbox.delete(0, tk.END)

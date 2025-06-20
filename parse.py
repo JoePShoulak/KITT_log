@@ -17,14 +17,16 @@ def parse_file(file):
     all_datasets = []
     errors = []
 
-    re_type = r"(ERR|DAT)"
+    re_type = r"\[\d+:\d+:\d+]\s+(ERR|DAT)\s+.*"
     re_err = r"\[(.*?)\]\s+ERR\s+(.*)"
     re_dat = r"\[(.*?)\]\s+\w+\s+([A-Za-z ]+):\s*([\d.]+)(\D+)"
 
     for line in file:
-        log_type = re.search(re_type, line).group(1)
+        type_match = re.search(re_type, line)
 
-        if log_type == "DAT":
+        if type_match is None: return
+
+        if type_match.group(1) == "DAT":
             time, name, value, unit = re.match(re_dat, line).groups()
             time, value = datetime.strptime(time, "%H:%M:%S"), float(value)
             dataset = next((d for d in all_datasets if d.name == name), None)
@@ -38,11 +40,3 @@ def parse_file(file):
             errors.append([datetime.strptime(time, "%H:%M:%S"), message])
 
     return all_datasets, errors
-
-if __name__ == "__main__":
-    filepath = "C:/Users/joeps/coding/kitt_py/data/log_11235813.txt"
-    try:
-        with open(filepath, 'r') as file:
-            datasets, errors = parse_file(file)
-            print(datasets, errors)
-    except: pass
