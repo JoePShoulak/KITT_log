@@ -3,16 +3,15 @@ from tkinter import filedialog, messagebox
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
-import math
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from parse import *
 
-class FileGraphApp:
+class KITTLogGrapher:
     def __init__(self, root):
         self.root = root
-        self.root.title("Dual-Axis Graph Viewer")
-        self.root.geometry("300x100")  # Start small
+        self.root.title("KITT Log Grapher")
+        self.root.geometry("300x100")
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
         self.selected_vars = []  # Up to 2 selected variable names
@@ -29,28 +28,22 @@ class FileGraphApp:
         self.root.destroy()
 
     def setup_ui(self):
-        # Frame to hold plot and variable list
         self.main_frame = tk.Frame(self.root)
         self.main_frame.pack(fill="both", expand=True, padx=10, pady=10)
 
-        # Plot area
         self.plot_frame = tk.Frame(self.main_frame)
         self.plot_frame.pack(side="left", fill="both", expand=True)
 
-        # Variable list area (hidden initially)
-        self.var_frame = tk.Frame(self.main_frame)
-
-        # Open file button (start position)
-        self.open_button = tk.Button(self.root, text="Open File", command=self.open_file)
-        self.open_button.pack(pady=(10, 5))
-
         self.date_label = tk.Label(self.var_frame, text="")
         self.var_label = tk.Label(self.var_frame, text="Select up to 2 variables:")
+        self.var_frame = tk.Frame(self.main_frame)
+
+        self.open_button = tk.Button(self.root, text="Open File", command=self.open_file)
+        self.open_button.pack(pady=(10, 5))
 
         self.var_listbox = tk.Listbox(self.var_frame, selectmode="multiple", exportselection=False)
         self.var_listbox.bind('<<ListboxSelect>>', self.on_variable_select)
 
-        # Error checkbox
         self.error_checkbox = tk.Checkbutton(self.var_frame, text="Show Errors", variable=self.show_errors, command=self.plot_data)
 
     def open_file(self):
@@ -69,7 +62,6 @@ class FileGraphApp:
             for var in self.all_vars:
                 self.var_listbox.insert(tk.END, var)
 
-            # Extract date from filename
             try:
                 filename = file_path.split("/")[-1]
                 timestamp = filename.split("_")[1][:4]  # MMDD
@@ -79,7 +71,6 @@ class FileGraphApp:
             except:
                 self.date_label.config(text=filename.split("_")[-1])
 
-            # Move open button to var_frame
             self.open_button.pack_forget()
             self.open_button.pack(in_=self.var_frame, pady=(0, 5))
 
@@ -90,6 +81,7 @@ class FileGraphApp:
 
             self.var_frame.pack(side="right", fill="y", padx=10)  # Show var list
             self.root.geometry("1200x900")  # Expand window after loading
+
             try:
                 self.plot_data()
             except Exception as e:
@@ -98,12 +90,13 @@ class FileGraphApp:
     def on_variable_select(self, event):
         selection = self.var_listbox.curselection()
         if len(selection) > 2:
-            # Revert selection to last valid state
             for i in range(len(self.all_vars)):
                 self.var_listbox.selection_clear(i)
+
             for var in self.selected_vars:
                 idx = self.all_vars.index(var)
                 self.var_listbox.selection_set(idx)
+
             messagebox.showwarning("Limit Exceeded", "Please select up to 2 variables.")
         else:
             self.selected_vars = [self.all_vars[i] for i in selection]
@@ -149,8 +142,7 @@ class FileGraphApp:
         ax1.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M:%S"))
         fig.autofmt_xdate()
 
-        if self.canvas:
-            self.canvas.get_tk_widget().destroy()
+        if self.canvas: self.canvas.get_tk_widget().destroy()
 
         self.canvas = FigureCanvasTkAgg(fig, master=self.plot_frame)
         self.canvas.draw()
@@ -158,5 +150,5 @@ class FileGraphApp:
 
 if __name__ == "__main__":
     root = tk.Tk()
-    app = FileGraphApp(root)
+    app = KITTLogGrapher(root)
     root.mainloop()
