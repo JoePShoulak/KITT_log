@@ -8,7 +8,7 @@ from datetime import timedelta
 
 from parse import *
 
-class KITTLogGrapher:
+class KITTLogGrapher: # TODO: Rename to Bonnie
     def __init__(self, root):
         self.root = root
         self.root.title("KITT Log Grapher")
